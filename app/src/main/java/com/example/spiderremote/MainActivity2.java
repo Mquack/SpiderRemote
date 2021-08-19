@@ -1,6 +1,7 @@
 package com.example.spiderremote;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.fragment.app.Fragment;
 
@@ -17,6 +18,7 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -44,6 +46,7 @@ public class MainActivity2 extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main2);
 
+
         Intent ish = getIntent();
         Bundle bleh = ish.getExtras();
         TextView btInfoText = (TextView)findViewById(R.id.connected_to);
@@ -51,7 +54,7 @@ public class MainActivity2 extends AppCompatActivity {
         SwitchCompat mySwitch = (SwitchCompat) findViewById(R.id.connection_switch);
         mySwitch.setClickable(false);
 
-        Button connect_btn = (Button) findViewById(R.id.btn_connect);
+        ImageButton connect_btn = (ImageButton) findViewById(R.id.btn_connect);
         connect_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -123,16 +126,16 @@ public class MainActivity2 extends AppCompatActivity {
             }
         });
 
-        Button btn1 = (Button) findViewById(R.id.btn_forward);
+        ImageButton btn1 = (ImageButton) findViewById(R.id.btn_forward);
         btn1.setOnTouchListener(myTouchListener);
 
-        Button btn2 = (Button) findViewById(R.id.btn_backward);
+        ImageButton btn2 = (ImageButton) findViewById(R.id.btn_backward);
         btn2.setOnTouchListener(myTouchListener);
 
-        Button btn3 = (Button) findViewById(R.id.btn_left);
+        ImageButton btn3 = (ImageButton) findViewById(R.id.btn_left);
         btn3.setOnTouchListener(myTouchListener);
 
-        Button btn4 = (Button) findViewById(R.id.btn_right);
+        ImageButton btn4 = (ImageButton) findViewById(R.id.btn_right);
         btn4.setOnTouchListener(myTouchListener);
     }
 
