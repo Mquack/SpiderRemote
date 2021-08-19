@@ -61,4 +61,5 @@ public class MainActivity extends AppCompatActivity {
             myPairedDevArr.add("No Paired Device.");
         }
     }
+
 }

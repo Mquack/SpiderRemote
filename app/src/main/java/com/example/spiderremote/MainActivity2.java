@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.fragment.app.Fragment;
 
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
@@ -37,6 +38,7 @@ public class MainActivity2 extends AppCompatActivity {
     private final static int CONNECTING_STATUS = 1; // used in bluetooth handler to identify message status
     private final static int MESSAGE_READ = 2; // used in bluetooth handler to identify message update
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,24 +51,18 @@ public class MainActivity2 extends AppCompatActivity {
         SwitchCompat mySwitch = (SwitchCompat) findViewById(R.id.connection_switch);
         mySwitch.setClickable(false);
 
-        //Button imageButton = (Button) findViewById(R.id.btn_forward);
-
-        //Button btn1 = (Button) findViewById(R.id.btn_forward);
-        //btn1.setOnTouchListener(onTouch());
-
-        /*imageButton.setOnTouchListener(new View.OnTouchListener() {
+        Button connect_btn = (Button) findViewById(R.id.btn_connect);
+        connect_btn.setOnClickListener(new View.OnClickListener() {
             @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if(event.getAction() == MotionEvent.ACTION_UP){
-                    Log.d("Logger1", "ACTION UP");
-                    return true;
-                }else if(event.getAction() == MotionEvent.ACTION_DOWN){
-                    Log.d("Logger1", "ACTION DOWN");
-                    return true;
+            public void onClick(View view) {
+                if (createConnectThread != null){
+                    createConnectThread.cancel();
                 }
-                return false;
+                BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+                createConnectThread = new CreateConnectThread(bluetoothAdapter,deviceAddress);
+                createConnectThread.start();
             }
-        });*/
+        });
 
 
         if (bleh != null){
@@ -76,9 +72,6 @@ public class MainActivity2 extends AppCompatActivity {
             String btMac = btArray[1];
             deviceAddress = btMac;
             deviceName = btName;
-
-            Log.d("Logger1", btName);
-            Log.d("Logger1", btMac);
         }
 
         // If a bluetooth device has been selected from SelectDeviceActivity
@@ -98,76 +91,81 @@ public class MainActivity2 extends AppCompatActivity {
                             case 1:
                                 Log.d("Logger1", "Connected to " + deviceName);
                                 mySwitch.setChecked(true);
-                                //btInfoText.append(deviceName);
                                 btInfoText.setText("Connected to: " + deviceName);
-                                //Toast.makeText(applicationContext, "Long Press Detected", Toast.LENGTH_SHORT).show();
+                                //connect_btn.setClickable(false);
                                 break;
                             case -1:
                                 Log.d("Logger1", "Device fails to connect");
                                 mySwitch.setChecked(false);
                                 btInfoText.setText("Failed to connect...");
+                                //connect_btn.setClickable(true);
                                 break;
                         }
                         break;
 
                     case MESSAGE_READ:
                         String arduinoMsg = msg.obj.toString(); // Read message from Arduino
-                        Log.d("Logger1", arduinoMsg);
+                        Log.d("Logger1", "Msg from Arduino: " + arduinoMsg);
                         break;
                 }
             }
         };
         /*
-        Button btn0 = (Button) findViewById(R.id.btn_center);
+        MyTouchListener touchListener = new MyTouchListener();
 
-        btn0.setOnTouchListener(View::onTouchEvent);
+        Button btn0 = (Button) findViewById(R.id.btn_center);
+        btn0.setOnTouchListener(touchListener);
+        */
+        RepeatListener myTouchListener = new RepeatListener(400, 900, new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                sendDataOnTouch(String.valueOf(view.getTag()));
+            }
+        });
 
         Button btn1 = (Button) findViewById(R.id.btn_forward);
-        //btn1.setId(1);
-        btn1.setOnTouchListener(View::onTouchEvent);
+        btn1.setOnTouchListener(myTouchListener);
 
         Button btn2 = (Button) findViewById(R.id.btn_backward);
-        //btn1.setId(2);
-        btn2.setOnTouchListener(View::onTouchEvent);
+        btn2.setOnTouchListener(myTouchListener);
 
         Button btn3 = (Button) findViewById(R.id.btn_left);
-        //btn1.setId(3);
-        btn3.setOnTouchListener(View::onTouchEvent);
+        btn3.setOnTouchListener(myTouchListener);
 
-         */
+        Button btn4 = (Button) findViewById(R.id.btn_right);
+        btn4.setOnTouchListener(myTouchListener);
     }
 
+    /*
     public class MyTouchListener implements View.OnTouchListener {
 
         @Override
         public boolean onTouch(View v, MotionEvent event) {
+            Log.d("Logger1", "FUCKIN TAG!!" + String.valueOf(v.getTag()));
             switch((String) v.getTag()){
                 case "0":
                     Log.d("Logger1", "THIS IS TOUCHBTN!!!" + String.valueOf(v.getTag()));
+                    sendDataOnTouch(String.valueOf(v.getTag()));
                     break;
                 case "1":
                     Log.d("Logger1", "THIS IS TOUCHBTN!!!" + String.valueOf(v.getId()));
-                    break;
-                case "2":
-                    Log.d("Logger1", "THIS IS TOUCHBTN!!!" + String.valueOf(v.getId()));
-                    break;
-                case "3":
-                    Log.d("Logger1", "THIS IS TOUCHBTN!!!" + String.valueOf(v.getId()));
+                    sendDataOnTouch(String.valueOf(v.getTag()));
                     break;
             }
             return true;
         }
-
     }
+    */
 
     public void sendData(View v){
         String sendVal = (String) v.getTag();
-        //byte[] bytes = sendVal.getBytes(StandardCharsets.UTF_8);
-        Log.d("Logger1", sendVal);
-        Log.d("Logger1", "TAG IS: " + (String) v.getTag());
-
+        Log.d("Logger1", "sendData -> " + (String) v.getTag());
         connectedThread.write(sendVal);
+    }
 
+    public void sendDataOnTouch(String s){
+        Log.d("Logger1", "sendDataOnTouch -> " + s);
+        connectedThread.write(s);
     }
 
     /* ============================ Thread to Create Bluetooth Connection =================================== */
@@ -308,15 +306,70 @@ public class MainActivity2 extends AppCompatActivity {
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
     }
-}
 
-/*
-    public void sendData(View v){
-        String sendVal = (String) v.getTag();
-        //Byte byteToSend = Byte.valueOf(sendVal);
-        byte[] bytes = sendVal.getBytes(StandardCharsets.UTF_8);
-        //connectedThread.write(byteToSend);
-        Log.d("Logger1", sendVal);
-        //MyBluetoothService.ConnectedThread.write(bytes);
+    /* ============================ Handle holding down button ====================== */
+
+    public class RepeatListener implements View.OnTouchListener {
+
+        private Handler handler = new Handler();
+
+        private int initialInterval;
+        private final int normalInterval;
+        private final View.OnClickListener clickListener;
+        private View touchedView;
+
+        private Runnable handlerRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if(touchedView.isEnabled()) {
+                    handler.postDelayed(this, normalInterval);
+                    clickListener.onClick(touchedView);
+                } else {
+                    // if the view was disabled by the clickListener, remove the callback
+                    handler.removeCallbacks(handlerRunnable);
+                    touchedView.setPressed(false);
+                    touchedView = null;
+                }
+            }
+        };
+
+        /**
+         * @param initialInterval The interval after first click event
+         * @param normalInterval The interval after second and subsequent click
+         *       events
+         * @param clickListener The OnClickListener, that will be called
+         *       periodically
+         */
+        public RepeatListener(int initialInterval, int normalInterval,
+                              View.OnClickListener clickListener) {
+            if (clickListener == null)
+                throw new IllegalArgumentException("null runnable");
+            if (initialInterval < 0 || normalInterval < 0)
+                throw new IllegalArgumentException("negative interval");
+
+            this.initialInterval = initialInterval;
+            this.normalInterval = normalInterval;
+            this.clickListener = clickListener;
+        }
+
+        public boolean onTouch(View view, MotionEvent motionEvent) {
+            switch (motionEvent.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    handler.removeCallbacks(handlerRunnable);
+                    handler.postDelayed(handlerRunnable, initialInterval);
+                    touchedView = view;
+                    touchedView.setPressed(true);
+                    clickListener.onClick(view);
+                    return true;
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    handler.removeCallbacks(handlerRunnable);
+                    touchedView.setPressed(false);
+                    touchedView = null;
+                    return true;
+            }
+            return false;
+        }
     }
-*/
+
+}
