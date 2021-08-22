@@ -6,24 +6,29 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <Button
-        android:id="@+id/scan"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+    <ImageButton
+        android:id="@+id/btn_scan"
+        android:layout_width="120dp"
+        android:layout_height="90dp"
+        android:background="@null"
         android:onClick="getBT"
-
-        android:text="Scan"
+        android:scaleType="centerCrop"
+        android:src="@drawable/scan"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.04000002" />
 
     <ListView
         android:id="@+id/dev_list"
         android:layout_width="400dp"
         android:layout_height="600dp"
+        android:fontFamily="@font/fredokaoneregular"
+        android:textSize="18dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/scan" />
+        app:layout_constraintTop_toBottomOf="@+id/btn_scan" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

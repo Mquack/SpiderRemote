@@ -3,18 +3,22 @@ package com.example.spiderremote;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.SwitchCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
@@ -29,6 +33,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 public class MainActivity2 extends AppCompatActivity {
+    Context context = this;
 
     private String deviceName = null;
     private String deviceAddress;
@@ -46,6 +51,12 @@ public class MainActivity2 extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main2);
 
+        RepeatListener myTouchListener = new RepeatListener(400, 900, new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                sendDataOnTouch(String.valueOf(view.getTag()));
+            }
+        });
 
         Intent ish = getIntent();
         Bundle bleh = ish.getExtras();
@@ -54,7 +65,33 @@ public class MainActivity2 extends AppCompatActivity {
         SwitchCompat mySwitch = (SwitchCompat) findViewById(R.id.connection_switch);
         mySwitch.setClickable(false);
 
+        ImageButton btnForward = (ImageButton) findViewById(R.id.btn_forward);
+        btnForward.setOnTouchListener(myTouchListener);
+        setClickableAnimation(btnForward);
+
+        ImageButton btnBackward = (ImageButton) findViewById(R.id.btn_backward);
+        btnBackward.setOnTouchListener(myTouchListener);
+        setClickableAnimation(btnBackward);
+
+        ImageButton btnLeft = (ImageButton) findViewById(R.id.btn_left);
+        btnLeft.setOnTouchListener(myTouchListener);
+        setClickableAnimation(btnLeft);
+
+        ImageButton btnRight = (ImageButton) findViewById(R.id.btn_right);
+        btnRight.setOnTouchListener(myTouchListener);
+        setClickableAnimation(btnRight);
+
+        ImageButton btnStand = (ImageButton) findViewById(R.id.btn_center);
+        setClickableAnimation(btnStand);
+
+        ImageButton btnWave = (ImageButton) findViewById(R.id.btn_wave);
+        setClickableAnimation(btnWave);
+
+        ImageButton btnStretch = (ImageButton) findViewById(R.id.btn_stretch);
+        setClickableAnimation(btnStretch);
+
         ImageButton connect_btn = (ImageButton) findViewById(R.id.btn_connect);
+        setClickableAnimation(connect_btn);
         connect_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -64,6 +101,8 @@ public class MainActivity2 extends AppCompatActivity {
                 BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
                 createConnectThread = new CreateConnectThread(bluetoothAdapter,deviceAddress);
                 createConnectThread.start();
+                mySwitch.setChecked(false);
+                btInfoText.setText("Connecting...");
             }
         });
 
@@ -113,52 +152,7 @@ public class MainActivity2 extends AppCompatActivity {
                 }
             }
         };
-        /*
-        MyTouchListener touchListener = new MyTouchListener();
-
-        Button btn0 = (Button) findViewById(R.id.btn_center);
-        btn0.setOnTouchListener(touchListener);
-        */
-        RepeatListener myTouchListener = new RepeatListener(400, 900, new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                sendDataOnTouch(String.valueOf(view.getTag()));
-            }
-        });
-
-        ImageButton btn1 = (ImageButton) findViewById(R.id.btn_forward);
-        btn1.setOnTouchListener(myTouchListener);
-
-        ImageButton btn2 = (ImageButton) findViewById(R.id.btn_backward);
-        btn2.setOnTouchListener(myTouchListener);
-
-        ImageButton btn3 = (ImageButton) findViewById(R.id.btn_left);
-        btn3.setOnTouchListener(myTouchListener);
-
-        ImageButton btn4 = (ImageButton) findViewById(R.id.btn_right);
-        btn4.setOnTouchListener(myTouchListener);
     }
-
-    /*
-    public class MyTouchListener implements View.OnTouchListener {
-
-        @Override
-        public boolean onTouch(View v, MotionEvent event) {
-            Log.d("Logger1", "FUCKIN TAG!!" + String.valueOf(v.getTag()));
-            switch((String) v.getTag()){
-                case "0":
-                    Log.d("Logger1", "THIS IS TOUCHBTN!!!" + String.valueOf(v.getTag()));
-                    sendDataOnTouch(String.valueOf(v.getTag()));
-                    break;
-                case "1":
-                    Log.d("Logger1", "THIS IS TOUCHBTN!!!" + String.valueOf(v.getId()));
-                    sendDataOnTouch(String.valueOf(v.getTag()));
-                    break;
-            }
-            return true;
-        }
-    }
-    */
 
     public void sendData(View v){
         String sendVal = (String) v.getTag();
@@ -373,6 +367,14 @@ public class MainActivity2 extends AppCompatActivity {
             }
             return false;
         }
+    }
+
+    private void setClickableAnimation(ImageButton imgBtn)
+    {
+        TypedValue outValue = new TypedValue();
+        this.getTheme().resolveAttribute(
+                android.R.attr.selectableItemBackgroundBorderless, outValue, true);
+        imgBtn.setBackground(ContextCompat.getDrawable(context, outValue.resourceId));
     }
 
 }
