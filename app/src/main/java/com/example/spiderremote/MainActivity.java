@@ -44,11 +44,7 @@ public class MainActivity extends AppCompatActivity {
             for (BluetoothDevice device : pairedDevices) {
                 myPairedDevArr.add(device.getName() + "<->" + device.getAddress());
             }
-            /*
-            for (int c = 0; c < myPairedDevArr.size(); c++){
-                Log.d("Logger1", myPairedDevArr.get(c).toString());
-            }
-            */
+
             ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, myPairedDevArr);
             arrayAdapter.notifyDataSetChanged();
             devListView.setAdapter(arrayAdapter);
@@ -59,11 +55,8 @@ public class MainActivity extends AppCompatActivity {
                     Intent intent = new Intent(getApplicationContext(), MainActivity2.class);
                     intent.putExtra("bt-info", myPairedDevArr.get(i));
                     startActivity(intent);
-
-
                 }
             });
-
         } else {
             myPairedDevArr.add("No Paired Device.");
         }
@@ -84,5 +77,4 @@ public class MainActivity extends AppCompatActivity {
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
     }
-
 }

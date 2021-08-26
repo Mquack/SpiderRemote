@@ -38,12 +38,12 @@ public class MainActivity2 extends AppCompatActivity {
     private String deviceName = null;
     private String deviceAddress;
     public static Handler handler;
-    public static BluetoothSocket mmSocket;
+    public static BluetoothSocket btSocket;
     public static ConnectedThread connectedThread;
     public static CreateConnectThread createConnectThread;
 
     private final static int CONNECTING_STATUS = 1; // used in bluetooth handler to identify message status
-    private final static int MESSAGE_READ = 2; // used in bluetooth handler to identify message update
+    private final static int MESSAGE_READ = 2;
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -58,38 +58,31 @@ public class MainActivity2 extends AppCompatActivity {
             }
         });
 
-        Intent ish = getIntent();
-        Bundle bleh = ish.getExtras();
+        Intent myIntent = getIntent();
+        Bundle myBtData = myIntent.getExtras();
+
         TextView btInfoText = (TextView)findViewById(R.id.connected_to);
 
         SwitchCompat mySwitch = (SwitchCompat) findViewById(R.id.connection_switch);
         mySwitch.setClickable(false);
 
         ImageButton btnForward = (ImageButton) findViewById(R.id.btn_forward);
-        btnForward.setOnTouchListener(myTouchListener);
-        setClickableAnimation(btnForward);
-
         ImageButton btnBackward = (ImageButton) findViewById(R.id.btn_backward);
-        btnBackward.setOnTouchListener(myTouchListener);
-        setClickableAnimation(btnBackward);
-
         ImageButton btnLeft = (ImageButton) findViewById(R.id.btn_left);
-        btnLeft.setOnTouchListener(myTouchListener);
-        setClickableAnimation(btnLeft);
-
         ImageButton btnRight = (ImageButton) findViewById(R.id.btn_right);
-        btnRight.setOnTouchListener(myTouchListener);
-        setClickableAnimation(btnRight);
-
         ImageButton btnStand = (ImageButton) findViewById(R.id.btn_center);
-        setClickableAnimation(btnStand);
-
         ImageButton btnWave = (ImageButton) findViewById(R.id.btn_wave);
-        setClickableAnimation(btnWave);
-
         ImageButton btnStretch = (ImageButton) findViewById(R.id.btn_stretch);
-        setClickableAnimation(btnStretch);
 
+
+        ImageButton[] dirButtons = {btnForward, btnBackward, btnLeft, btnRight, btnStand, btnWave, btnStretch};
+        for(int i = 0; i < dirButtons.length; ++i){
+            setClickableAnimation(dirButtons[i]);
+            dirButtons[i].setEnabled(false);
+            if(i < 4){
+                dirButtons[i].setOnTouchListener(myTouchListener);
+            }
+        }
         ImageButton connect_btn = (ImageButton) findViewById(R.id.btn_connect);
         setClickableAnimation(connect_btn);
         connect_btn.setOnClickListener(new View.OnClickListener() {
@@ -107,8 +100,8 @@ public class MainActivity2 extends AppCompatActivity {
         });
 
 
-        if (bleh != null){
-            String blueToothInfo = (String) bleh.get("bt-info");
+        if (myBtData != null){
+            String blueToothInfo = (String) myBtData.get("bt-info");
             String[] btArray =blueToothInfo.split("<->");
             String btName = btArray[0];
             String btMac = btArray[1];
@@ -134,13 +127,15 @@ public class MainActivity2 extends AppCompatActivity {
                                 Log.d("Logger1", "Connected to " + deviceName);
                                 mySwitch.setChecked(true);
                                 btInfoText.setText("Connected to: " + deviceName);
-                                //connect_btn.setClickable(false);
+                                //Enable control buttons when connected.
+                                for(int i = 0; i < dirButtons.length; ++i){
+                                    dirButtons[i].setEnabled(true);
+                                }
                                 break;
                             case -1:
                                 Log.d("Logger1", "Device fails to connect");
                                 mySwitch.setChecked(false);
                                 btInfoText.setText("Failed to connect...");
-                                //connect_btn.setClickable(true);
                                 break;
                         }
                         break;
@@ -170,8 +165,8 @@ public class MainActivity2 extends AppCompatActivity {
 
         public CreateConnectThread(BluetoothAdapter bluetoothAdapter, String address) {
             /*
-            Use a temporary object that is later assigned to mmSocket
-            because mmSocket is final.
+            Use a temporary object that is later assigned to btSocket
+            because btSocket is final.
              */
             BluetoothDevice bluetoothDevice = bluetoothAdapter.getRemoteDevice(address);
             BluetoothSocket tmp = null;
@@ -184,7 +179,7 @@ public class MainActivity2 extends AppCompatActivity {
             } catch (IOException e) {
                 Log.e("Logger1", "Socket's create() method failed", e);
             }
-            mmSocket = tmp;
+            btSocket = tmp;
         }
 
         public void run() {
@@ -194,13 +189,13 @@ public class MainActivity2 extends AppCompatActivity {
             try {
                 // Connect to the remote device through the socket. This call blocks
                 // until it succeeds or throws an exception.
-                mmSocket.connect();
+                btSocket.connect();
                 Log.e("Status", "Device connected");
                 handler.obtainMessage(CONNECTING_STATUS, 1, -1).sendToTarget();
             } catch (IOException connectException) {
                 // Unable to connect; close the socket and return.
                 try {
-                    mmSocket.close();
+                    btSocket.close();
                     Log.e("Status", "Cannot connect to device");
                     handler.obtainMessage(CONNECTING_STATUS, -1, -1).sendToTarget();
                 } catch (IOException closeException) {
@@ -211,14 +206,14 @@ public class MainActivity2 extends AppCompatActivity {
 
             // The connection attempt succeeded. Perform work associated with
             // the connection in a separate thread.
-            connectedThread = new ConnectedThread(mmSocket);
+            connectedThread = new ConnectedThread(btSocket);
             connectedThread.run();
         }
 
         // Closes the client socket and causes the thread to finish.
         public void cancel() {
             try {
-                mmSocket.close();
+                btSocket.close();
             } catch (IOException e) {
                 Log.e("Logger1", "Could not close the client socket", e);
             }
@@ -227,12 +222,12 @@ public class MainActivity2 extends AppCompatActivity {
 
     /* =============================== Thread for Data Transfer =========================================== */
     public static class ConnectedThread extends Thread {
-        private final BluetoothSocket mmSocket;
-        private final InputStream mmInStream;
-        private final OutputStream mmOutStream;
+        private final BluetoothSocket btSocket;
+        private final InputStream btInStream;
+        private final OutputStream btOutStream;
 
         public ConnectedThread(BluetoothSocket socket) {
-            mmSocket = socket;
+            btSocket = socket;
             InputStream tmpIn = null;
             OutputStream tmpOut = null;
 
@@ -243,8 +238,8 @@ public class MainActivity2 extends AppCompatActivity {
                 tmpOut = socket.getOutputStream();
             } catch (IOException e) { }
 
-            mmInStream = tmpIn;
-            mmOutStream = tmpOut;
+            btInStream = tmpIn;
+            btOutStream = tmpOut;
         }
 
         public void run() {
@@ -257,11 +252,10 @@ public class MainActivity2 extends AppCompatActivity {
                     Read from the InputStream from Arduino until termination character is reached.
                     Then send the whole String message to GUI Handler.
                      */
-                    buffer[bytes] = (byte) mmInStream.read();
+                    buffer[bytes] = (byte) btInStream.read();
                     String readMessage;
                     if (buffer[bytes] == '\n'){
                         readMessage = new String(buffer,0,bytes);
-                        Log.e("Arduino Message",readMessage);
                         handler.obtainMessage(MESSAGE_READ,readMessage).sendToTarget();
                         bytes = 0;
                     } else {
@@ -278,16 +272,15 @@ public class MainActivity2 extends AppCompatActivity {
         public void write(String input) {
             byte[] bytes = input.getBytes(); //converts entered String into bytes
             try {
-                mmOutStream.write(bytes);
+                btOutStream.write(bytes);
             } catch (IOException e) {
                 Log.e("Send Error","Unable to send message",e);
             }
         }
-
         /* Call this from the main activity to shutdown the connection */
         public void cancel() {
             try {
-                mmSocket.close();
+                btSocket.close();
             } catch (IOException e) { }
         }
     }
@@ -299,6 +292,7 @@ public class MainActivity2 extends AppCompatActivity {
         if (createConnectThread != null){
             createConnectThread.cancel();
         }
+        connectedThread.cancel();
         Intent intent = new Intent(getApplicationContext(), MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
@@ -368,7 +362,7 @@ public class MainActivity2 extends AppCompatActivity {
             return false;
         }
     }
-
+    /* Button click animation */
     private void setClickableAnimation(ImageButton imgBtn)
     {
         TypedValue outValue = new TypedValue();
@@ -376,5 +370,4 @@ public class MainActivity2 extends AppCompatActivity {
                 android.R.attr.selectableItemBackgroundBorderless, outValue, true);
         imgBtn.setBackground(ContextCompat.getDrawable(context, outValue.resourceId));
     }
-
 }
