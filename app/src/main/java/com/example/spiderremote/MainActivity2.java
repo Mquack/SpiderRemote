@@ -83,6 +83,7 @@ public class MainActivity2 extends AppCompatActivity {
                 dirButtons[i].setOnTouchListener(myTouchListener);
             }
         }
+
         ImageButton connect_btn = (ImageButton) findViewById(R.id.btn_connect);
         setClickableAnimation(connect_btn);
         connect_btn.setOnClickListener(new View.OnClickListener() {
@@ -99,7 +100,6 @@ public class MainActivity2 extends AppCompatActivity {
             }
         });
 
-
         if (myBtData != null){
             String blueToothInfo = (String) myBtData.get("bt-info");
             String[] btArray =blueToothInfo.split("<->");
@@ -115,7 +115,6 @@ public class MainActivity2 extends AppCompatActivity {
             createConnectThread = new CreateConnectThread(bluetoothAdapter,deviceAddress);
             createConnectThread.start();
         }
-
 
         handler = new Handler(Looper.getMainLooper()) {
             @Override
@@ -299,7 +298,6 @@ public class MainActivity2 extends AppCompatActivity {
     }
 
     /* ============================ Handle holding down button ====================== */
-
     public class RepeatListener implements View.OnTouchListener {
 
         private Handler handler = new Handler();
@@ -323,7 +321,6 @@ public class MainActivity2 extends AppCompatActivity {
                 }
             }
         };
-
         /**
          * @param initialInterval The interval after first click event
          * @param normalInterval The interval after second and subsequent click
